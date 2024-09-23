@@ -1,0 +1,222 @@
+//RUNAS//
+import win.reg;
+import console;
+import console.progress;
+import fsys.version;
+import web.json;
+import inet.http;
+import inet.httpFile;
+import zlib.unzip;
+import process.popen;
+
+_QQ_REG_PATH = "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\QQ";
+_QQ_REG_INSTALLED_VER = "DisplayVersion";
+_QQ_REG_INSTALLED_PATH = "UninstallString";
+_QQ_DOWNLOAD_HASH = "0f14ef6e";
+_FILE_DOWNLOAD_PATH = "/.tmp/";
+_QQ_INSTALL_FILENAME = "InstallQQ.exe";
+_FW_INSTALL_FILENAME = "NCFWO.zip";
+_TARGET_QQVERSION = "9.9.15.28131";
+_TARGET_FWVERSION = "2.6.14";
+_QQ_GETNEWVERSION_URL = "https://nclatest.znin.net/getqqver";
+_FW_GETNEWVERSION_URL = "https://nclatest.znin.net/";
+_FW_DOWNLOAD_URL = "https://github.com/NapNeko/NapCatQQ/releases/download/v%s/NapCat.Framework.Windows.Once.zip"
+_GITHUB_PROXY = {
+	"https://github.moeyy.xyz/",
+	"https://mirror.ghproxy.com/",
+	"https://gh-proxy.com/",
+	"https://x.haod.me/"
+}
+_GITHUB_CHECK_URL = "https://raw.githubusercontent.com/NapNeko/NapCatQQ/main/package.json";
+
+// 版本比较
+installedQQ = function(version){
+	var qqVer = fsys.version(version);
+	if qqVer >= fsys.version(getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION) return true;
+	return false;
+}
+
+// 下载文件
+downloadFile = function(url, fileName){
+	var remoteFile = inet.httpFile(url, _FILE_DOWNLOAD_PATH ++ fileName);
+	var ok,err,errCode = remoteFile.test();
+	if(ok){
+		console.log("文件已下载完成!"); 
+		return ok;
+	}
+	elseif(ok === null){
+		console.logPause(err);
+		return ok;
+	}
+	var progress = console.progress();
+	remoteFile.onReceiveBegin = function(statusCode,contentLength,fileSize){
+		if(statusCode == 206/*断点续传*/){
+			progress.setProgress((fileSize/contentLength)*100,"正在断点续传") 
+		}
+		elseif(fileSize){
+			progress.setProgress((fileSize/contentLength)*100,"正在重新下载")  
+		};
+	};
+	remoteFile.onReceive = function(str,downSize,contentLength){
+		progress.addProgress((downSize/contentLength)*100,
+			"正在下载, 文件大小: " + math.size64(contentLength).format());
+	};
+	return remoteFile.download();
+}
+
+deleteFile = function(path){
+	if io.exist(path) {
+		console.printf("清理文件: %s", path);
+		if !fsys.delete(path) {
+			console.log("清理失败, 请手动删除!");
+			return false;
+		}
+	}
+	return true;
+}
+
+killQQ = function(){
+	process.kill("QQ.exe");
+}
+
+// 安装QQ
+installQQ = function(qqPath){
+	// 下载
+	var url = string.format("https://dldir1.qq.com/qqfile/qq/QQNT/%s/QQ%s_x64.exe",
+		 _QQ_DOWNLOAD_HASH, getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION);
+	var ok = downloadFile(url, _QQ_INSTALL_FILENAME);
+	if !ok return ok;
+	// 结束QQ进程
+	killQQ();
+	// 检查DLL残留
+	if qqPath {
+		var dllPath = qqPath.dir ++ "dbghelp.dll";
+		while(!deleteFile(dllPath)){
+			console.logPause("请手动删除后按任意键继续...");
+		}
+	} else qqPath = "C:\Program Files\Tencent\QQNT";
+	// 执行QQInstall
+	console.log("准备就绪, 开始安装QQ...");
+	var prcs = process.popen(_FILE_DOWNLOAD_PATH ++ _QQ_INSTALL_FILENAME, "/s");
+	var std, err, exitCode = prcs.readAll();
+	if err && exitCode !== 0 return null;
+	return io.splitpath(qqPath);
+}
+
+// 检查QQ
+checkQQ = function(){
+	// 检查是否已安装
+	var qqVerTxt = win.reg.queryWow64(_QQ_REG_PATH, _QQ_REG_INSTALLED_VER);
+	var qqPath = win.reg.queryWow64(_QQ_REG_PATH, _QQ_REG_INSTALLED_PATH);
+	var newVer = fsys.version(getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION);
+	if qqPath qqPath = io.splitpath(qqPath);
+	if !installedQQ(qqVerTxt) {
+		console.printf("当前版本：%s, 目标版本: %s, 你得%sQQ!", qqVerTxt || "未知", tostring(newVer), !qqVerTxt ? "安装" : "更新");
+		var lastPath = installQQ(qqPath);
+		if !lastPath {
+			console.log("安装QQ失败, 请重新执行或手动安装!");
+		} else console.log("恭喜你! QQ安装完成!");
+		return lastPath; 
+	} else {
+		console.printf("当前版本: %s, 目标版本: %s, 跳过安装QQ!", qqVerTxt, tostring(newVer));
+		return qqPath;
+	}
+}
+
+// 网络检测
+networkCHK = function(){
+	var p = null;
+	var n = inet.http();
+	for k, v in _GITHUB_PROXY {
+		var res = n.get(v ++ _GITHUB_CHECK_URL);
+		if res {
+			p = v;
+			break;
+		}
+	}
+	return p;
+}
+
+// 检查新版本
+getNewVer = function(url){
+	var net = inet.http();
+	var res = net.get(url);
+	var json = web.json.tryParse(res);
+	if !json {
+		console.log("新版本获取失败, 使用预设...");
+		return null;
+	}
+	return json.version || json.tag_name;
+}
+
+// 安装FW
+installFW = function(qqPath, fwVer){
+	// 下载FW
+	var proxy = networkCHK();
+	if !proxy console.log("代理无法工作, 将使用直连...");
+	console.printf("使用代理: %s", proxy);
+	var downUrl = string.concat(
+		proxy,
+		string.format(_FW_DOWNLOAD_URL, tostring(fwVer))
+	);
+	var ok = downloadFile(downUrl, _FW_INSTALL_FILENAME);
+	if !ok return ok;
+	// 解压缩
+	console.showLoading("文件解压中...",,console.color.yellow);
+	var ret = zlib.unzip.extract(_FILE_DOWNLOAD_PATH ++ _FW_INSTALL_FILENAME, qqPath.dir,
+		function(fileName,extractPath,fileInfo,size,unitSize,unitName){
+			if(extractPath){
+				return true;
+			}
+		}
+	);
+	return ret;
+}
+
+// 检查框架
+checkFW = function(qqPath){
+	// 检查是否已安装过FW
+	var FWPath = qqPath.dir ++ "LL\plugins\NapCatQQ";
+	var pkgJson = web.json.tryParse(
+		string.load(FWPath ++ "\package.json")
+	);
+	var FWVer = fsys.version(pkgJson.version);
+	var FWNewVer = fsys.version(getNewVer(_FW_GETNEWVERSION_URL) || _TARGET_FWVERSION);
+	if !pkgJson || FWVer < FWNewVer {
+		console.printf("当前版本: %s, 目标版本: %s, 你得%s框架!", tostring(FWVer) || "未知", tostring(FWNewVer), !FWVer ? "安装" : "更新");
+		if installFW(qqPath, FWNewVer) return true;
+		return false;
+	}
+	console.printf("当前版本: %s, 目标版本: %s, 跳过安装框架!", tostring(FWVer), tostring(FWNewVer));
+	return true;
+}
+
+// 主流程
+main = function(){
+	console.setTitle("NapCat.Framework.Installer");
+	console.log(
+		'欢迎使用 瞌睡猫猫 框架版 安装器 >_0 !\n'
+		++ '接下来将进行 LiteLoaderQQNT 与 NapCat for Framework 的安装...\n'
+	);
+	// QQ部分
+	console.log("====== 安装QQ ======");
+	var qqPath = checkQQ();
+	if !qqPath {
+		console.log("检查失败，QQ未就绪!");
+		return;
+	} else console.log('检查通过，QQ已就绪!\n');
+	// LLNC部分
+	console.log("====== 安装LLNC ======");
+	if !checkFW(qqPath) {
+		console.log("检查失败, LLNC未就绪!");
+		return;
+	} else console.log('检查通过, LLNC已就绪!\n');
+	console.log(
+		'====== 结束啦 ======\n'
+		++ "恭喜你完成了安装! 芜湖! 请享受吧!"
+	);
+}
+
+// 执行
+main();
+console.pause();
