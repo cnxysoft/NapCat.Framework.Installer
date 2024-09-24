@@ -84,7 +84,7 @@ killQQ = function(){
 installQQ = function(qqPath){
 	// 下载
 	var url = string.format("https://dldir1.qq.com/qqfile/qq/QQNT/%s/QQ%s_x64.exe",
-		 _QQ_DOWNLOAD_HASH, getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION);
+		 getQQHash() || _QQ_DOWNLOAD_HASH, getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION);
 	var ok = downloadFile(url, _QQ_INSTALL_FILENAME);
 	if !ok return ok;
 	// 结束QQ进程
@@ -148,6 +148,17 @@ getNewVer = function(url){
 		return null;
 	}
 	return json.version || json.tag_name;
+}
+
+getQQHash = function(){
+	var net = inet.http();
+	var res = net.get(url);
+	var json = web.json.tryParse(res);
+	if !json {
+		console.log("QQHash获取失败, 使用预设...");
+		return null;
+	}
+	return json.verHash;
 }
 
 // 安装FW
@@ -222,15 +233,15 @@ main = function(){
 		++ "不需要的话直接关闭就可以了哦~"
 	);
 	var shortcut = fsys.shortcut(qqPath.dir);
-	var ret = shortcut.create( 
+	shortcut.create(
 	    lnk = "NapCatWinBootMain.exe";
 	    filename = "QQ";
 	    icon = "QQ.exe";
-	    iconIndex = 0;  
+	    iconIndex = 0;
 	    desktop = true;
 	);
 }
 
 // 执行
 main();
-console.pause();
+sleep(5000);
