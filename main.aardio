@@ -180,14 +180,14 @@ checkFW = function(qqPath){
 	var pkgJson = web.json.tryParse(
 		string.load(FWPath ++ "\package.json")
 	);
-	var FWVer = fsys.version(pkgJson.version);
+	var FWVer = pkgJson ? pkgJson.version : null;
 	var FWNewVer = fsys.version(getNewVer(_FW_GETNEWVERSION_URL) || _TARGET_FWVERSION);
-	if !pkgJson || FWVer < FWNewVer {
-		console.printf("当前版本: %s, 目标版本: %s, 你得%s框架!", tostring(FWVer) || "未知", tostring(FWNewVer), !FWVer ? "安装" : "更新");
+	if !pkgJson || fsys.version(FWVer) < FWNewVer {
+		console.printf("当前版本: %s, 目标版本: %s, 你得%s框架!", FWVer || "未知", tostring(FWNewVer), !FWVer ? "安装" : "更新");
 		if installFW(qqPath, FWNewVer) return true;
 		return false;
 	}
-	console.printf("当前版本: %s, 目标版本: %s, 跳过安装框架!", tostring(FWVer), tostring(FWNewVer));
+	console.printf("当前版本: %s, 目标版本: %s, 跳过安装框架!", FWVer, tostring(FWNewVer));
 	return true;
 }
 
