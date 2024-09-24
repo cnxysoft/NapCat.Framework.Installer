@@ -97,7 +97,7 @@ installQQ = function(qqPath){
 		while(!deleteFile(dllPath)){
 			console.logPause("请手动删除后按任意键继续...");
 		}
-	} else qqPath = io.splitpath("C:\Program Files\Tencent\QQNT");
+	} else qqPath = io.splitpath("C:\Program Files\Tencent\QQNT\");
 	// 执行QQInstall
 	console.log("准备就绪, 开始安装QQ...");
 	var prcs = process.popen(_FILE_DOWNLOAD_PATH ++ _QQ_INSTALL_FILENAME, "/s");
