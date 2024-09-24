@@ -14,7 +14,7 @@ _QQ_REG_PATH = "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\Curren
 _QQ_REG_INSTALLED_VER = "DisplayVersion";
 _QQ_REG_INSTALLED_PATH = "UninstallString";
 _QQ_DOWNLOAD_HASH = "0f14ef6e";
-_FILE_DOWNLOAD_PATH = "/.tmp/";
+_FILE_DOWNLOAD_PATH = io.getSpecial(0x1c/*_CSIDL_LOCAL_APPDATA*/) ++ "\Temp";
 _QQ_INSTALL_FILENAME = "InstallQQ.exe";
 _FW_INSTALL_FILENAME = "NCFWO.zip";
 _TARGET_QQVERSION = "9.9.15.28131";
@@ -97,13 +97,13 @@ installQQ = function(qqPath){
 		while(!deleteFile(dllPath)){
 			console.logPause("请手动删除后按任意键继续...");
 		}
-	} else qqPath = "C:\Program Files\Tencent\QQNT";
+	} else qqPath = io.splitpath("C:\Program Files\Tencent\QQNT");
 	// 执行QQInstall
 	console.log("准备就绪, 开始安装QQ...");
 	var prcs = process.popen(_FILE_DOWNLOAD_PATH ++ _QQ_INSTALL_FILENAME, "/s");
 	var std, err, exitCode = prcs.readAll();
 	if err && exitCode !== 0 return null;
-	return io.splitpath(qqPath);
+	return qqPath;
 }
 
 // 检查QQ
@@ -130,6 +130,7 @@ checkQQ = function(){
 networkCHK = function(){
 	var p = null;
 	var n = inet.http();
+	n.setTimeouts(5,5,5);
 	for k, v in _GITHUB_PROXY {
 		var res = n.get(v ++ _GITHUB_CHECK_URL);
 		if res {
@@ -143,6 +144,7 @@ networkCHK = function(){
 // 检查新版本
 getNewVer = function(url){
 	var net = inet.http();
+	net.setTimeouts(5,5,5);
 	var res = net.get(url);
 	var json = web.json.tryParse(res);
 	if !json {
@@ -154,6 +156,7 @@ getNewVer = function(url){
 
 getQQHash = function(){
 	var net = inet.http();
+	net.setTimeouts(5,5,5);
 	var res = net.get(_QQ_GETNEWVERSION_URL);
 	var json = web.json.tryParse(res);
 	if !json {
