@@ -84,7 +84,10 @@ killQQ = function(){
 installQQ = function(qqPath){
 	// 下载
 	var url = string.format("https://dldir1.qq.com/qqfile/qq/QQNT/%s/QQ%s_x64.exe",
-		 getQQHash() || _QQ_DOWNLOAD_HASH, getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION);
+		getQQHash() || _QQ_DOWNLOAD_HASH,
+		tostring(fsys.version(getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION))
+	);
+	console.log(url)
 	var ok = downloadFile(url, _QQ_INSTALL_FILENAME);
 	if !ok return ok;
 	// 结束QQ进程
