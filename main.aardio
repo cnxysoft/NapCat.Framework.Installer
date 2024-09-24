@@ -29,7 +29,7 @@ _GITHUB_PROXY = {
 	"https://x.haod.me/"
 }
 _GITHUB_CHECK_URL = "https://raw.githubusercontent.com/NapNeko/NapCatQQ/main/package.json";
-var proxyParm, forceParm
+var proxyParm, forceParm;
 
 // 版本比较
 installedQQ = function(version){
@@ -116,14 +116,22 @@ checkQQ = function(){
 	if qqPath qqPath = io.splitpath(qqPath);
 	if !installedQQ(qqVerTxt) || forceParm {
 		if forceParm console.log("强制安装模式...");
-		console.printf("当前版本：%s, 目标版本: %s, 你得%sQQ!", qqVerTxt || "未知", tostring(newVer), !qqVerTxt ? "安装" : "更新");
+		console.printf(
+			"当前版本：%s, 目标版本: %s, 你得%sQQ!",
+			qqVerTxt || "未知",
+			tostring(newVer), !qqVerTxt ? "安装" : "更新"
+		);
 		var lastPath = installQQ(qqPath);
 		if !lastPath {
 			console.log("安装QQ失败, 请重新执行或手动安装!");
 		} else console.log("恭喜你! QQ安装完成!");
 		return lastPath; 
 	} else {
-		console.printf("当前版本: %s, 目标版本: %s, 跳过安装QQ!", qqVerTxt, tostring(newVer));
+		console.printf(
+			"当前版本: %s, 目标版本: %s, 跳过安装QQ!",
+			qqVerTxt,
+			tostring(newVer)
+		);
 		return qqPath;
 	}
 }
@@ -201,7 +209,11 @@ checkFW = function(qqPath){
 	var FWNewVer = fsys.version(getNewVer(_FW_GETNEWVERSION_URL) || _TARGET_FWVERSION);
 	if !pkgJson || fsys.version(FWVer) < FWNewVer || forceParm {
 		if forceParm console.log("强制安装模式...");
-		console.printf("当前版本: %s, 目标版本: %s, 你得%s框架!", FWVer || "未知", tostring(FWNewVer), !FWVer ? "安装" : "更新");
+		console.printf(
+			"当前版本: %s, 目标版本: %s, 你得%s框架!",
+			FWVer || "未知",
+			tostring(FWNewVer), !FWVer ? "安装" : "更新"
+		);
 		if installFW(qqPath, FWNewVer) return true;
 		return false;
 	}
@@ -251,7 +263,7 @@ main = function(){
 // 命令行处理
 if _ARGV.h || _ARGV.help {
 	console.logPause(
-		'NapCat.Framework.Installer v1.0.0 NapNeko © 2024 \n\n'
+		'NapCat.Framework.Installer v1.1.0 NapNeko © 2024 \n\n'
 		++ '  -p --proxy   指定代理 0~4 (0为禁用)\n'
 		++ '  -f --force   强制安装\n'
 		++ '  -h --help    显示帮助\n'
