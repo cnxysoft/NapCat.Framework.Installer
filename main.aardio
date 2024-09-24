@@ -29,6 +29,7 @@ _GITHUB_PROXY = {
 	"https://x.haod.me/"
 }
 _GITHUB_CHECK_URL = "https://raw.githubusercontent.com/NapNeko/NapCatQQ/main/package.json";
+var proxyParm, forceParm
 
 // 版本比较
 installedQQ = function(version){
@@ -84,7 +85,7 @@ killQQ = function(){
 installQQ = function(qqPath){
 	// 下载
 	var url = string.format("https://dldir1.qq.com/qqfile/qq/QQNT/%s/QQ%s_x64.exe",
-		getQQHash() || _QQ_DOWNLOAD_HASH,
+		getNewVer(_QQ_GETNEWVERSION_URL, true) || _QQ_DOWNLOAD_HASH,
 		tostring(fsys.version(getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION))
 	);
 	var ok = downloadFile(url, _QQ_INSTALL_FILENAME);
@@ -113,7 +114,8 @@ checkQQ = function(){
 	var qqPath = win.reg.queryWow64(_QQ_REG_PATH, _QQ_REG_INSTALLED_PATH);
 	var newVer = fsys.version(getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION);
 	if qqPath qqPath = io.splitpath(qqPath);
-	if !installedQQ(qqVerTxt) {
+	if !installedQQ(qqVerTxt) || forceParm {
+		if forceParm console.log("强制安装模式...");
 		console.printf("当前版本：%s, 目标版本: %s, 你得%sQQ!", qqVerTxt || "未知", tostring(newVer), !qqVerTxt ? "安装" : "更新");
 		var lastPath = installQQ(qqPath);
 		if !lastPath {
@@ -128,6 +130,16 @@ checkQQ = function(){
 
 // 网络检测
 networkCHK = function(){
+	// 检查命令行代理设置
+	if proxyParm !== null {
+		if proxyParm < 0 || proxyParm > #_GITHUB_PROXY {
+			console.log("代理设置错误, 还得是我自己选...");
+		} elseif proxyParm === 0 {
+			console.log("已关闭代理, 那就直接访问Github...");
+			return "";
+		} else return _GITHUB_PROXY[proxyParm];
+	}
+	// 自动选择代理
 	var p = null;
 	var n = inet.http();
 	n.setTimeouts(5,5,5);
@@ -142,28 +154,16 @@ networkCHK = function(){
 }
 
 // 检查新版本
-getNewVer = function(url){
+getNewVer = function(url, hash){
 	var net = inet.http();
 	net.setTimeouts(5,5,5);
 	var res = net.get(url);
 	var json = web.json.tryParse(res);
 	if !json {
-		console.log("新版本获取失败, 使用预设...");
+		console.printf("新%s获取失败, 使用预设...", hash ? "HASH" : "版本");
 		return null;
 	}
-	return json.version || json.tag_name;
-}
-
-getQQHash = function(){
-	var net = inet.http();
-	net.setTimeouts(5,5,5);
-	var res = net.get(_QQ_GETNEWVERSION_URL);
-	var json = web.json.tryParse(res);
-	if !json {
-		console.log("QQHash获取失败, 使用预设...");
-		return null;
-	}
-	return json.verHash;
+	return hash ? json.verHash : json.version || json.tag_name;
 }
 
 // 安装FW
@@ -171,7 +171,7 @@ installFW = function(qqPath, fwVer){
 	// 下载FW
 	var proxy = networkCHK();
 	if !proxy console.log("代理无法工作, 将使用直连...");
-	console.printf("使用代理: %s", proxy);
+	if proxy !== "" console.printf("使用代理: %s", proxy);
 	var downUrl = string.concat(
 		proxy,
 		string.format(_FW_DOWNLOAD_URL, tostring(fwVer))
@@ -199,7 +199,8 @@ checkFW = function(qqPath){
 	);
 	var FWVer = pkgJson ? pkgJson.version : null;
 	var FWNewVer = fsys.version(getNewVer(_FW_GETNEWVERSION_URL) || _TARGET_FWVERSION);
-	if !pkgJson || fsys.version(FWVer) < FWNewVer {
+	if !pkgJson || fsys.version(FWVer) < FWNewVer || forceParm {
+		if forceParm console.log("强制安装模式...");
 		console.printf("当前版本: %s, 目标版本: %s, 你得%s框架!", FWVer || "未知", tostring(FWNewVer), !FWVer ? "安装" : "更新");
 		if installFW(qqPath, FWNewVer) return true;
 		return false;
@@ -247,6 +248,22 @@ main = function(){
 	);
 }
 
-// 执行
-main();
-sleep(5000);
+// 命令行处理
+if _ARGV.h || _ARGV.help {
+	console.logPause(
+		'NapCat.Framework.Installer v1.0.0 NapNeko © 2024 \n\n'
+		++ '  -p --proxy   指定代理 0~4 (0为禁用)\n'
+		++ '  -f --force   强制安装\n'
+		++ '  -h --help    显示帮助\n'
+	);
+} else {
+	if _ARGV.p || _ARGV.proxy {
+		proxyParm = tonumber(_ARGV.p || _ARGV.proxy);
+	}
+	if _ARGV.f || _ARGV.force {
+		forceParm = true;
+	}
+	// 执行流程
+	main();
+	sleep(2000);
+}
