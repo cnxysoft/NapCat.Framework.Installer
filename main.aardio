@@ -87,7 +87,6 @@ installQQ = function(qqPath){
 		getQQHash() || _QQ_DOWNLOAD_HASH,
 		tostring(fsys.version(getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION))
 	);
-	console.log(url)
 	var ok = downloadFile(url, _QQ_INSTALL_FILENAME);
 	if !ok return ok;
 	// 结束QQ进程
@@ -155,7 +154,7 @@ getNewVer = function(url){
 
 getQQHash = function(){
 	var net = inet.http();
-	var res = net.get(url);
+	var res = net.get(_QQ_GETNEWVERSION_URL);
 	var json = web.json.tryParse(res);
 	if !json {
 		console.log("QQHash获取失败, 使用预设...");
