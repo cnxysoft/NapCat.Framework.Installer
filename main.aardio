@@ -2,6 +2,7 @@
 import win.reg;
 import console;
 import console.progress;
+import fsys.shortcut;
 import fsys.version;
 import web.json;
 import inet.http;
@@ -213,7 +214,20 @@ main = function(){
 	} else console.log('检查通过, LLNC已就绪!\n');
 	console.log(
 		'====== 结束啦 ======\n'
-		++ "恭喜你完成了安装! 芜湖! 请享受吧!"
+		++ '恭喜你完成了安装! 芜湖! 请享受吧!\n'
+	);
+	console.logPause(
+		'====== 快捷方式 ======\n'
+		++ '对了，需要创建桌面快捷方式吗？\n'
+		++ "不需要的话直接关闭就可以了哦~"
+	);
+	var shortcut = fsys.shortcut(qqPath.dir);
+	var ret = shortcut.create( 
+	    lnk = "NapCatWinBootMain.exe";
+	    filename = "QQ";
+	    icon = "QQ.exe";
+	    iconIndex = 0;  
+	    desktop = true;
 	);
 }
 
