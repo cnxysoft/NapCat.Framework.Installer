@@ -14,12 +14,13 @@ _QQ_REG_PATH = "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\Curren
 _QQ_REG_INSTALLED_VER = "DisplayVersion";
 _QQ_REG_INSTALLED_PATH = "UninstallString";
 _QQ_DOWNLOAD_HASH = "0f14ef6e";
+_QQ_DOWNLOAD_BASE_URL = "https://dldir1.qq.com/qqfile/qq/QQNT/%s/QQ%s_x64.exe";
 _FILE_DOWNLOAD_PATH = io.getSpecial(0x1c/*_CSIDL_LOCAL_APPDATA*/) ++ "\Temp\";
 _QQ_INSTALL_FILENAME = "InstallQQ.exe";
 _FW_INSTALL_FILENAME = "NCFWO.zip";
-_TARGET_QQVERSION = "9.9.15.28131";
-_TARGET_FWVERSION = "2.6.14";
-_QQ_GETNEWVERSION_URL = "https://nclatest.znin.net/getqqver";
+_TARGET_QQVERSION = "9.9.15.28327";
+_TARGET_FWVERSION = "2.6.15";
+_QQ_GETNEWVERSION_URL = "https://nclatest.znin.net/get_qq_ver";
 _FW_GETNEWVERSION_URL = "https://nclatest.znin.net/";
 _FW_DOWNLOAD_URL = "https://github.com/NapNeko/NapCatQQ/releases/download/v%s/NapCat.Framework.Windows.Once.zip"
 _GITHUB_PROXY = {
@@ -84,7 +85,7 @@ killQQ = function(){
 // 安装QQ
 installQQ = function(qqPath){
 	// 下载
-	var url = string.format("https://dldir1.qq.com/qqfile/qq/QQNT/%s/QQ%s_x64.exe",
+	var url = string.format(_QQ_DOWNLOAD_BASE_URL,
 		getNewVer(_QQ_GETNEWVERSION_URL, true) || _QQ_DOWNLOAD_HASH,
 		tostring(fsys.version(getNewVer(_QQ_GETNEWVERSION_URL) || _TARGET_QQVERSION))
 	);
