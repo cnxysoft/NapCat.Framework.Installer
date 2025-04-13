@@ -18,8 +18,8 @@ _QQ_DOWNLOAD_BASE_URL = "https://dldir1.qq.com/qqfile/qq/QQNT/%s/QQ%s_x64.exe";
 _FILE_DOWNLOAD_PATH = io.getSpecial(0x1c/*_CSIDL_LOCAL_APPDATA*/) ++ "\Temp\";
 _QQ_INSTALL_FILENAME = "InstallQQ.exe";
 _FW_INSTALL_FILENAME = "NCFWO.zip";
-_TARGET_QQVERSION = "9.9.15.28327";
-_TARGET_FWVERSION = "2.6.15";
+_TARGET_QQVERSION = "9.9.18.32793";
+_TARGET_FWVERSION = "4.7.8";
 _QQ_GETNEWVERSION_URL = "https://nclatest.znin.net/get_qq_ver";
 _FW_GETNEWVERSION_URL = "https://nclatest.znin.net/";
 _FW_DOWNLOAD_URL = "https://github.com/NapNeko/NapCatQQ/releases/download/v%s/NapCat.Framework.Windows.Once.zip"
@@ -183,7 +183,7 @@ installFW = function(qqPath, fwVer){
 	if proxy !== "" console.printf("使用代理: %s", proxy);
 	var downUrl = string.concat(
 		proxy,
-		string.format(_FW_DOWNLOAD_URL, tostring(fwVer))
+		string.format(_FW_DOWNLOAD_URL, tostring(fwVer, "%d.%d.%d"))
 	);
 	var ok = downloadFile(downUrl, _FW_INSTALL_FILENAME);
 	if !ok return ok;
@@ -213,7 +213,7 @@ checkFW = function(qqPath){
 		console.printf(
 			"当前版本: %s, 目标版本: %s, 你得%s框架!",
 			FWVer || "未知",
-			tostring(FWNewVer), !FWVer ? "安装" : "更新"
+			tostring(FWNewVer, "%d.%d.%d"), !FWVer ? "安装" : "更新"
 		);
 		if installFW(qqPath, FWNewVer) return true;
 		return false;
